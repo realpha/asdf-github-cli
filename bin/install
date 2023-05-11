@@ -16,32 +16,34 @@ install_github_cli() {
   local bin_install_path="$install_path/bin"
   local bin_path="${bin_install_path}/gh"
 
-  local arch=$(uname -m)
-  case ${arch} in
+  local arch=""
+  case $(uname -m) in
     arm64) arch="arm64";; # m1 macs
     aarch64) arch="arm64";;
     *) arch="amd64";;
   esac
 
-  local platform=$(uname | tr '[:upper:]' '[:lower:]')
-  
+  local platform=""
   local file_ext=""
-  case ${platform} in
-    linux*) file_ext="tar.gz";;
-    darwin*) file_ext="zip";;
-    *) file_ext=notset;;
-  esac
-  
-  case ${platform} in 
-    linux*) platform="linux_${arch}";;
-    darwin*) platform="macOS_${arch}";;
-    *) platform=notset;;
+  case $(uname | tr '[:upper:]' '[:lower:]') in 
+    linux*) 
+      platform="linux_${arch}"
+      file_ext="tar.gz"
+      ;;
+    darwin*) 
+      platform="macOS_${arch}"
+      file_ext="zip"
+      ;;
+    *) 
+      platform=notset
+      file_ext=notset
+      ;;
   esac
 
   
-  local filename="gh_${version}_${platform}.${file_ext}"
-  local download_url="$(get_download_url $filename $version)"
-  local tmp_bin_path="${TMPDIR}/${filename}"
+  local filename="gh_${version}_${platform}"
+  local download_url="$(get_download_url $filename $version $file_ext)"
+  local tmp_bin_path="${TMPDIR}/${filename}.${ext}"
   local tmp_path="${TMPDIR}/${filename}"
 
   echo "Downloading github-cli from ${download_url}"
@@ -64,7 +66,8 @@ install_github_cli() {
 get_download_url() {
   local filename="${1}"
   local version="${2}"
-  echo "https://github.com/cli/cli/releases/download/v${version}/${filename}"
+  local ext="${3}"
+  echo "https://github.com/cli/cli/releases/download/v${version}/${filename}.${ext}"
 }
 
 extract() {
