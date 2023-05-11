@@ -43,7 +43,7 @@ install_github_cli() {
   
   local filename="gh_${version}_${platform}"
   local download_url="$(get_download_url $filename $version $file_ext)"
-  local tmp_bin_path="${TMPDIR}/${filename}.${ext}"
+  local tmp_bin_path="${TMPDIR}/${filename}.${file_ext}"
   local tmp_path="${TMPDIR}/${filename}"
 
   echo "Downloading github-cli from ${download_url}"
