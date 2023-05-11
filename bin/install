@@ -16,21 +16,32 @@ install_github_cli() {
   local bin_install_path="$install_path/bin"
   local bin_path="${bin_install_path}/gh"
 
-  case $(uname | tr '[:upper:]' '[:lower:]') in
-    linux*)
-      local platform=linux_amd64
-      ;;
-    darwin*)
-      local platform=macOS_amd64
-      ;;
-    *)
-      local platform=notset
-      ;;
+  local arch=$(uname -m)
+  case ${arch} in
+    arm64) arch="arm64";; # m1 macs
+    aarch64) arch="arm64";;
+    *) arch="amd64";;
   esac
 
-  local filename="gh_${version}_${platform}"
-  local download_url="$(get_download_url $filename)"
-  local tmp_bin_path="${TMPDIR}/${filename}.tar.gz"
+  local platform=$(uname | tr '[:upper:]' '[:lower:]')
+  
+  local file_ext=""
+  case ${platform} in
+    linux*) file_ext="tar.gz";;
+    darwin*) file_ext="zip";;
+    *) file_ext=notset;;
+  esac
+  
+  case ${platform} in 
+    linux*) platform="linux_${arch}";;
+    darwin*) platform="macOS_${arch}";;
+    *) platform=notset;;
+  esac
+
+  
+  local filename="gh_${version}_${platform}.${file_ext}"
+  local download_url="$(get_download_url $filename $version)"
+  local tmp_bin_path="${TMPDIR}/${filename}"
   local tmp_path="${TMPDIR}/${filename}"
 
   echo "Downloading github-cli from ${download_url}"
@@ -38,7 +49,7 @@ install_github_cli() {
   curl -sL $download_url -o $tmp_bin_path
 
   echo "Extracting ${tmp_bin_path}"
-  tar -zxf $tmp_bin_path --directory $TMPDIR
+  extract $tmp_bin_path $TMPDIR $file_ext
 
   echo "Moving bin to ${bin_path}"
   cp $tmp_path/bin/gh $bin_path
@@ -51,8 +62,21 @@ install_github_cli() {
 }
 
 get_download_url() {
-  local filename="$1"
-  echo "https://github.com/cli/cli/releases/download/v${version}/${filename}.tar.gz"
+  local filename="${1}"
+  local version="${2}"
+  echo "https://github.com/cli/cli/releases/download/v${version}/${filename}"
+}
+
+extract() {
+  local archive_path="${1}"
+  local out_dir="${2}"
+  local archive_type="${3}"
+
+  if [[ "${archive_type}" == "zip" ]]; then
+    unzip $archive_path -d $out_dir
+  else
+    tar -zxf $archive_path --directory $out_dir
+  fi
 }
 
 install_github_cli $ASDF_INSTALL_TYPE $ASDF_INSTALL_VERSION $ASDF_INSTALL_PATH
